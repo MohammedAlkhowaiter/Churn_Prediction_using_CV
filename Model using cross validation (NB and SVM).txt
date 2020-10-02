@@ -1,0 +1,52 @@
+import pandas
+import matplotlib.pyplot as plt
+from sklearn import model_selection
+from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import SVC
+
+
+# load dataset
+Data = "/content/churn(1).xlsx"
+
+dataframe = pandas.read_excel(Data)
+#print(dataframe.head())
+dataframe = dataframe.drop(columns=["CustomerID"])
+
+
+#print(dataframe.head())
+
+
+print(dataframe.head())
+print(dataframe.info())
+print(dataframe.columns)
+
+
+X = dataframe.drop(['Churn'], axis=1)
+X = pandas.get_dummies(X)
+Y = dataframe['Churn']
+
+# prepare configuration for cross validation test harness
+seed = 7
+# prepare models
+models = []
+
+models.append(('NB', GaussianNB()))
+models.append(('SVM', SVC())) # using gamma classfier will make accuracy for svm better
+# evaluate each model in turn
+results = []
+names = []
+scoring = 'accuracy'
+for name, model in models:
+	kfold = model_selection.KFold(n_splits=10, random_state=None, shuffle=False)
+	cv_results = model_selection.cross_val_score(model, X, Y, cv=kfold, scoring=scoring)
+	results.append(cv_results)
+	names.append(name)
+	msg = "%s: %f (%f)" % (name, cv_results.mean(), cv_results.std())
+	print(msg)
+# boxplot algorithm comparison
+fig = plt.figure()
+fig.suptitle('Algorithm Comparison')
+ax = fig.add_subplot(111)
+plt.boxplot(results)
+ax.set_xticklabels(names)
+plt.show()
